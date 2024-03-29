@@ -29,6 +29,11 @@ This command will give to you an api key that should be used on each call as a q
 api/merchants/{siretId}?api_key=ak_9efcd259266235814829bfb9f2132acac76f0b27
 ```
 
+## Command to read files from Edenred SFTP
+```shellsession
+php bin/console edenred:synchronizer:read
+```
+
 ## API docs
 
 http://localhost:8000/api
