@@ -29,3 +29,5 @@ services:
             $sftpPort: '%env(EDENRED_SFTP_PORT)%'
             $sftpUsername: '%env(EDENRED_SFTP_USERNAME)%'
             $sftpPrivateKeyFile: '%env(EDENRED_SFTP_PRIVATE_KEY_FILE)%'
+            $sftpReadDirectory: '%env(EDENRED_SFTP_READ_DIR)%'
+            $sftpWriteDirectory: '%env(EDENRED_SFTP_WRITE_DIR)%'

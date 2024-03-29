@@ -11,7 +11,9 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\PhpseclibV3\SftpAdapter;
 use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
 use League\Flysystem\StorageAttributes;
+use League\Flysystem\UnableToWriteFile;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
 class EdenredManager
 {
@@ -22,6 +24,8 @@ class EdenredManager
     private $sftpPort;
     private $sftpUsername;
     private $sftpPrivateKeyFile;
+    private $sftpReadDirectory;
+    private $sftpWriteDirectory;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -30,7 +34,9 @@ class EdenredManager
         string $sftpHost,
         string $sftpPort,
         string $sftpUsername,
-        string $sftpPrivateKeyFile
+        string $sftpPrivateKeyFile,
+        string $sftpReadDirectory,
+        string $sftpWriteDirectory
     )
     {
         $this->entityManager = $entityManager;
@@ -40,6 +46,8 @@ class EdenredManager
         $this->sftpPort = $sftpPort;
         $this->sftpUsername = $sftpUsername;
         $this->sftpPrivateKeyFile = $sftpPrivateKeyFile;
+        $this->sftpReadDirectory = $sftpReadDirectory;
+        $this->sftpWriteDirectory = $sftpWriteDirectory;
     }
 
     public function createSyncFileAndSendToEdenred(array $merchants): void
@@ -72,10 +80,18 @@ class EdenredManager
                 30, // timeout (optional, default: 10)
                 10, // max tries (optional, default: 4)
             ),
-            '/sftp/IN', // path
+            $this->sftpWriteDirectory, // path
         ));
 
-        $filesystem->write($fullFileName, $xml);
+        try {
+            $filesystem->write($fullFileName, $xml);
+            $file->setSent(true);
+        } catch (UnableToWriteFile $e) {
+            $file->setErrors($e->getMessage());
+            $this->entityManager->persist($file);
+            $this->entityManager->flush();
+            throw $e;
+        }
     }
 
     public function readEdenredFileAndSynchronise()
@@ -92,7 +108,7 @@ class EdenredManager
                 30, // timeout (optional, default: 10)
                 10, // max tries (optional, default: 4)
             ),
-            '/sftp/OUT', // path
+            $this->sftpReadDirectory, // path
         ));
 
         $allPaths = $filesystem->listContents('')
@@ -185,6 +201,12 @@ class EdenredManager
 
         $parsedMerchants = 0;
         foreach ($merchants as $merchant) {
+            $existingMerchant = $this->entityManager->getRepository(Merchant::class)->find($merchant->getSiret());
+
+            if ($existingMerchant && null !== $existingMerchant->getMerchantId()) {
+                throw new BadRequestException(sprintf("Merchant with siret %s already synchronized", $merchant->getSiret()));
+            }
+
             $parsedMerchants++;
             $PDVElement = $xml->createElement('PDV');
             $PDVElement->setAttribute('Siret', $merchant->getSiret());
@@ -193,8 +215,6 @@ class EdenredManager
             $PDVElement->setAttribute('Ville', $merchant->getCity());
             $PDVElement->setAttribute('CodePostal', $merchant->getPostalCode());
             $documentElement->appendChild($PDVElement);
-
-            $this->entityManager->persist($merchant);
         }
 
         $documentElement->setAttribute('nombreAffilies', $parsedMerchants); // Nombre des affilies du fichier

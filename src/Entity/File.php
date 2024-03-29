@@ -15,6 +15,12 @@ class File
     #[ORM\Column]
     private $name;
 
+    #[ORM\Column(type: "boolean")]
+    private $sent = false;
+
+    #[ORM\Column(nullable: true)]
+    private $errors;
+
     public function __construct(string $name)
     {
         $this->name = $name;
@@ -40,6 +46,30 @@ class File
     public function setName($name)
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getSent()
+    {
+        return $this->sent;
+    }
+
+    public function setSent($sent)
+    {
+        $this->sent = $sent;
+
+        return $this;
+    }
+
+    public function getErrors()
+    {
+        return $this->errors;
+    }
+
+    public function setErrors($errors)
+    {
+        $this->errors = $errors;
 
         return $this;
     }
