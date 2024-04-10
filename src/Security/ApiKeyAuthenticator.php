@@ -4,6 +4,7 @@ namespace App\Security;
 
 use App\Entity\ApiClient;
 use App\Entity\User;
+use App\Security\Authentication\Token\ApiKeyToken;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,44 +20,39 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 class ApiKeyAuthenticator extends AbstractAuthenticator
 {
     private $logger;
-    private $apiKeyManager;
     private $entityManager;
 
     public function __construct(
         LoggerInterface $logger,
-        ApiKeyManager $apiKeyManager,
         EntityManagerInterface $entityManager)
     {
         $this->logger = $logger;
-        $this->apiKeyManager = $apiKeyManager;
         $this->entityManager = $entityManager;
     }
 
     public function supports(Request $request): ?bool
     {
-        return $this->apiKeyManager->supports($request);
+        return $request->query->has('api_key');
     }
 
     public function authenticate(Request $request): Passport
     {
-        // This means the token starts with "ak_"
-        if ($this->apiKeyManager->supports($request)) {
-            try {
-                return $this->authenticateWithApiKey($request);
-            } catch (AuthenticationException $e) {
-                $this->logAuthenticationException($request, 'ApiKey', $e);
-                throw $e;
-            }
+        try {
+            return $this->authenticateWithApiKey($request);
+        } catch (AuthenticationException $e) {
+            $this->logAuthenticationException($request, 'ApiKey', $e);
+            throw $e;
         }
     }
 
-    private function authenticateWithApiKey(Request $request): Passport {
-        $token = $this->apiKeyManager->getCredentials($request);
+    private function authenticateWithApiKey(Request $request): Passport
+    {
+        $token = new ApiKeyToken(['ROLE_API_KEY'], $request->query->get('api_key'));
 
         $apiClient = $this->entityManager
             ->getRepository(ApiClient::class)
             ->findOneBy([
-                'apiKey' => substr($token->getCredentials(), 3),
+                'apiKey' => $token->getCredentials(),
             ]);
 
         if (null === $apiClient) {

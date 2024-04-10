@@ -1,0 +1,35 @@
+# Development environment override
+services:
+  php:
+    build:
+      context: .
+      target: frankenphp_dev
+    volumes:
+      - ./:/app
+      - ./frankenphp/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frankenphp/conf.d/app.dev.ini:/usr/local/etc/php/conf.d/app.dev.ini:ro
+      # If you develop on Mac or Windows you can remove the vendor/ directory
+      #  from the bind-mount for better performance by enabling the next line:
+      #- /app/vendor
+      - ~/.ssh/id_rsa:/opt/id_rsa:ro
+    environment:
+      MERCURE_EXTRA_DIRECTIVES: demo
+      # See https://xdebug.org/docs/all_settings#mode
+      XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+    extra_hosts:
+      # Ensure that host.docker.internal is correctly defined on Linux
+      - host.docker.internal:host-gateway
+    tty: true
+  sftp:
+    image: atmoz/sftp
+    volumes:
+        - ./var/upload:/home/edenred/upload
+        - ./var/download:/home/edenred/download
+        - ~/.ssh/id_rsa.pub:/home/edenred/.ssh/keys/id_rsa.pub:ro
+    command: edenred::1001
+
+###> symfony/mercure-bundle ###
+###< symfony/mercure-bundle ###
+
+###> doctrine/doctrine-bundle ###
+###< doctrine/doctrine-bundle ###

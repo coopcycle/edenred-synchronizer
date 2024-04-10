@@ -5,8 +5,6 @@ security:
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
         users_in_memory: { memory: null }
-        jwt:
-            lexik_jwt: ~
         users:
             entity:
                 # the class of the entity that represents users
@@ -22,7 +20,7 @@ security:
             stateless: true
             custom_authenticators:
                 - App\Security\ApiKeyAuthenticator
-            provider: jwt
+            provider: users_in_memory
         main:
             lazy: true
             provider: users_in_memory
