@@ -31,7 +31,7 @@ Class CreateClientApiKey extends Command
         $this
             ->setName('synchronizer:client:create')
             ->addArgument('client', InputArgument::REQUIRED, 'Client name', null)
-            ->setDescription('Creat an api key for a client.')
+            ->setDescription('Create an api key for a client.')
             ;
     }
 
@@ -58,7 +58,7 @@ Class CreateClientApiKey extends Command
         $this->entityManager->persist($apiClient);
         $this->entityManager->flush();
 
-        $this->io->text(sprintf('Share this api key ak_%s with the client', $key));
+        $this->io->text(sprintf('Share this api key %s with the client', $key));
 
         return 0;
     }
