@@ -1,42 +1,37 @@
-# edenred-synchronizer
+# Edenred Synchronizer
 
-API service to interact with Edenred FTP Server for merchants synchronizaition
-
-## Requirements
-```
-php8.2
-sqlite3
-php8.2-sqlite3
-php8.2-mbstring
-```
-## Database setup
-```shellsession
-php bin/console doctrine:database:create
-php bin/console doctrine:migrations:migrate
-```
+API service to interact with Edenred FTP Server for merchants synchronization
 
 ## Start server
+
+This project uses [Symfony Docker](https://github.com/dunglas/symfony-docker)
+
 ```shellsession
-symfony server:start
+docker compose build --no-cache --pull
+docker compose up
 ```
 
 ## Create a new api client
+
 ```shellsession
-php bin/console synchronizer:client:create "client_name"
+docker compose exec php bin/console synchronizer:client:create "client_name"
 ```
-This command will give to you an api key that should be used on each call as a query param ('ak_' preffix should be added to the api key)
+
+This command will give to you an api key that should be used on each call as a query param
+
 ```
-api/merchants/{siretId}?api_key=ak_9efcd259266235814829bfb9f2132acac76f0b27
+api/merchants/{siretId}?api_key=9efcd259266235814829bfb9f2132acac76f0b27
 ```
 
 ## Command to read files from Edenred SFTP
+
 ```shellsession
-php bin/console edenred:synchronizer:read
+docker compose exec php bin/console edenred:synchronizer:read
 ```
 
 ## API docs
 
-http://localhost:8000/api
+https://localhost/api
 
 ## Testing
 
