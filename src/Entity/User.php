@@ -5,10 +5,9 @@ namespace App\Entity;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 use Doctrine\ORM\Mapping as ORM;
-use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
 
 #[ORM\Entity()]
-class User implements UserInterface, JWTUserInterface
+class User implements UserInterface
 {
     #[ORM\Id]
     #[ORM\Column(type: "integer", unique: true)]
