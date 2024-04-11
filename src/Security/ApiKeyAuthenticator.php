@@ -81,13 +81,6 @@ class ApiKeyAuthenticator extends AbstractAuthenticator
             return $apiKeyToken;
         }
 
-        $jwtToken = $passport->getAttribute('jwt_token');
-
-        if ($jwtToken) {
-
-            return $jwtToken;
-        }
-
         return null;
     }
 
