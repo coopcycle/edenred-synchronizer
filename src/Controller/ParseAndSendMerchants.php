@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use ApiPlatform\Validator\ValidatorInterface;
 use App\Dto\MerchantsDto;
 use App\Entity\Merchant;
 use App\Service\EdenredManager;
@@ -19,6 +20,7 @@ class ParseAndSendMerchants extends AbstractController
     public function __construct(
         EdenredManager $edenredManager,
         EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator
     ) {
         $this->entityManager = $entityManager;
         $this->edenredManager = $edenredManager;
@@ -26,9 +28,11 @@ class ParseAndSendMerchants extends AbstractController
 
     public function __invoke(MerchantsDto $merchantsDto)
     {
+        $this->validator->validate($merchantsDto);
+
         $existingSirets = [];
         $merchantsToSend = [];
-        foreach($merchantsDto->merchants as $merchant) {
+        foreach ($merchantsDto->merchants as $merchant) {
             $existingMerchant = $this->entityManager->getRepository(Merchant::class)->find($merchant->getSiret());
             if ($existingMerchant) {
                 if (null !== $existingMerchant->getMerchantId()) {

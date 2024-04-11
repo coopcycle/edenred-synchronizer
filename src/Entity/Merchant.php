@@ -10,6 +10,7 @@ use App\Controller\ParseAndSendMerchants;
 use App\Dto\MerchantsDto;
 use Doctrine\DBAL\SQL\Parser;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(operations: [
     new Get(
@@ -28,6 +29,7 @@ class Merchant
     #[ORM\Column(length: 20)]
     #[ORM\GeneratedValue("NONE")]
     #[ApiProperty(identifier: true)]
+    #[Assert\Luhn(message: 'Invalid SIRET number.')]
     private $siret;
 
     #[ORM\Column(nullable: true)]
