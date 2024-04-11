@@ -20,32 +20,23 @@ class EdenredManager
     private $entityManager;
     private $logger;
     private $partnerName;
-    private $sftpHost;
-    private $sftpPort;
-    private $sftpUsername;
-    private $sftpPrivateKeyFile;
+    private $sftpConnectionProvider;
     private $sftpReadDirectory;
     private $sftpWriteDirectory;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         LoggerInterface $logger,
+        SftpConnectionProvider $sftpConnectionProvider,
         string $partnerName,
-        string $sftpHost,
-        string $sftpPort,
-        string $sftpUsername,
-        string $sftpPrivateKeyFile,
         string $sftpReadDirectory,
         string $sftpWriteDirectory
     )
     {
         $this->entityManager = $entityManager;
         $this->logger = $logger;
+        $this->sftpConnectionProvider = $sftpConnectionProvider;
         $this->partnerName = $partnerName;
-        $this->sftpHost = $sftpHost;
-        $this->sftpPort = $sftpPort;
-        $this->sftpUsername = $sftpUsername;
-        $this->sftpPrivateKeyFile = $sftpPrivateKeyFile;
         $this->sftpReadDirectory = $sftpReadDirectory;
         $this->sftpWriteDirectory = $sftpWriteDirectory;
     }
@@ -69,17 +60,7 @@ class EdenredManager
         $this->entityManager->persist($file);
 
         $filesystem = new Filesystem(new SftpAdapter(
-            new SftpConnectionProvider(
-                $this->sftpHost,
-                $this->sftpUsername,
-                null, // password
-                $this->sftpPrivateKeyFile,
-                null, // passphrase
-                $this->sftpPort,
-                false,
-                30, // timeout (optional, default: 10)
-                10, // max tries (optional, default: 4)
-            ),
+            $this->sftpConnectionProvider,
             $this->sftpWriteDirectory, // path
         ));
 
@@ -97,17 +78,7 @@ class EdenredManager
     public function readEdenredFileAndSynchronise()
     {
         $filesystem = new Filesystem(new SftpAdapter(
-            new SftpConnectionProvider(
-                $this->sftpHost,
-                $this->sftpUsername,
-                null, // password
-                $this->sftpPrivateKeyFile,
-                null, // passphrase
-                $this->sftpPort,
-                false,
-                30, // timeout (optional, default: 10)
-                10, // max tries (optional, default: 4)
-            ),
+            $this->sftpConnectionProvider,
             $this->sftpReadDirectory, // path
         ));
 
