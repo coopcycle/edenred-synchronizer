@@ -181,10 +181,18 @@ class EdenredManager
             $parsedMerchants++;
             $PDVElement = $xml->createElement('PDV');
             $PDVElement->setAttribute('Siret', $merchant->getSiret());
-            $PDVElement->setAttribute('Addinfo', $merchant->getAddInfo());
-            $PDVElement->setAttribute('Adresse', $merchant->getAddress());
-            $PDVElement->setAttribute('Ville', $merchant->getCity());
-            $PDVElement->setAttribute('CodePostal', $merchant->getPostalCode());
+            if (!empty($merchant->getAddInfo())) {
+                $PDVElement->setAttribute('Addinfo', $merchant->getAddInfo());
+            }
+            if (!empty($merchant->getAddress())) {
+                $PDVElement->setAttribute('Adresse', $merchant->getAddress());
+            }
+            if (!empty($merchant->getCity())) {
+                $PDVElement->setAttribute('Ville', $merchant->getCity());
+            }
+            if (!empty($merchant->getPostalCode())) {
+                $PDVElement->setAttribute('CodePostal', $merchant->getPostalCode());
+            }
             $documentElement->appendChild($PDVElement);
         }
 
