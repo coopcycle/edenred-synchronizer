@@ -54,7 +54,7 @@ class EdenredManager
         $number = $file->getId();
         $fullFileName = sprintf('%s_%s.xml', $fileName, $number);
 
-        $xml = $this->createXML($merchants, $fullFileName, $date, $number);
+        $xml = $this->createXML($merchants, sprintf('%s_RAEN', $this->partnerName), $date, $number);
 
         $file->setName($fullFileName);
         $this->entityManager->persist($file);
@@ -142,7 +142,7 @@ class EdenredManager
         }
     }
 
-    private function createXML(array $merchants, string $fileName, \DateTime $dateTime, string $number)
+    private function createXML(array $merchants, string $name, \DateTime $dateTime, string $number)
     {
         $xml = new DOMDocument('1.0', 'UTF-8');
 
@@ -166,7 +166,7 @@ class EdenredManager
         /*
         <!-- Nom du fichier NomMarketPlace_RAEN_TRDQ_AAAAMMJJ_HHNNSS_NumeroOrdre.xml-->
         */
-        $documentElement->setAttribute('nom', $fileName);
+        $documentElement->setAttribute('nom', $name);
 
         $documentElement->setAttribute('ordre', $number); //Numero de sequence Padleft 0
 
