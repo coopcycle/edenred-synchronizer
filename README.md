@@ -43,3 +43,9 @@ Sending
 ```shellsession
 curl -k -v -X POST -H 'Content-Type: application/json' -d '{"merchants":[{"siret":"123456"}]}' 'https://localhost/api/merchants?api_key=<api_key>'
 ```
+
+Connecting to SQLite database
+
+```shellsession
+docker compose exec php sqlite3 var/db/data.db
+```
