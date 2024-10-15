@@ -2,7 +2,9 @@
 
 namespace App\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity()]
 class File
@@ -20,6 +22,14 @@ class File
 
     #[ORM\Column(nullable: true)]
     private $errors;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Gedmo\Timestampable(on: 'create')]
+    public ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Gedmo\Timestampable(on: 'update')]
+    public ?\DateTimeImmutable $updatedAt = null;
 
     public function __construct(string $name)
     {
