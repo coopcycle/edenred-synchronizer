@@ -78,8 +78,14 @@ class EdenredManager
         $this->logger->info(sprintf('%d files at Edenred SFTP for sync', count($allPaths)));
 
         $contents = array_map(function($path) {
+
             $this->logger->info(sprintf('Reading content from file "%s"', $path));
-            return $this->sftpReadStorage->read($path);
+
+            $content = $this->sftpReadStorage->read($path);
+
+            $this->s3Storage->write(sprintf('received/%s', $path), $content);
+
+            return $content;
         }, $allPaths);
 
         foreach ($contents as $content) {
