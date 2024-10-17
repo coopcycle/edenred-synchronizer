@@ -8,8 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use DOMDocument;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
-use League\Flysystem\PhpseclibV3\SftpAdapter;
-use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToWriteFile;
 use Psr\Log\LoggerInterface;
@@ -20,25 +19,21 @@ class EdenredManager
     private $entityManager;
     private $logger;
     private $partnerName;
-    private $sftpConnectionProvider;
-    private $sftpReadDirectory;
-    private $sftpWriteDirectory;
+    private $s3Storage;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         LoggerInterface $logger,
-        SftpConnectionProvider $sftpConnectionProvider,
         string $partnerName,
-        string $sftpReadDirectory,
-        string $sftpWriteDirectory
+        FilesystemOperator $s3Storage,
+        private FilesystemOperator $sftpWriteStorage,
+        private FilesystemOperator $sftpReadStorage
     )
     {
         $this->entityManager = $entityManager;
         $this->logger = $logger;
-        $this->sftpConnectionProvider = $sftpConnectionProvider;
         $this->partnerName = $partnerName;
-        $this->sftpReadDirectory = $sftpReadDirectory;
-        $this->sftpWriteDirectory = $sftpWriteDirectory;
+        $this->s3Storage = $s3Storage;
     }
 
     public function createSyncFileAndSendToEdenred(array $merchants): void
@@ -59,13 +54,9 @@ class EdenredManager
         $file->setName($fullFileName);
         $this->entityManager->persist($file);
 
-        $filesystem = new Filesystem(new SftpAdapter(
-            $this->sftpConnectionProvider,
-            $this->sftpWriteDirectory, // path
-        ));
-
         try {
-            $filesystem->write($fullFileName, $xml);
+            $this->s3Storage->write(sprintf('sent/%s', $fullFileName), $xml);
+            $this->sftpWriteStorage->write($fullFileName, $xml);
             $file->setSent(true);
         } catch (UnableToWriteFile $e) {
             $file->setErrors($e->getMessage());
@@ -77,12 +68,7 @@ class EdenredManager
 
     public function readEdenredFileAndSynchronise()
     {
-        $filesystem = new Filesystem(new SftpAdapter(
-            $this->sftpConnectionProvider,
-            $this->sftpReadDirectory, // path
-        ));
-
-        $allPaths = $filesystem->listContents('')
+        $allPaths = $this->sftpReadStorage->listContents('')
             ->filter(fn (StorageAttributes $attributes) => $attributes->isFile())
             ->filter(fn (FileAttributes $attributes) =>
                 str_starts_with($attributes->path(), sprintf('RAEN_%s_TRDQ_', strtoupper($this->partnerName))) & $attributes->fileSize() > 0)
@@ -91,9 +77,15 @@ class EdenredManager
 
         $this->logger->info(sprintf('%d files at Edenred SFTP for sync', count($allPaths)));
 
-        $contents = array_map(function($path) use($filesystem) {
+        $contents = array_map(function($path) {
+
             $this->logger->info(sprintf('Reading content from file "%s"', $path));
-            return $filesystem->read($path);
+
+            $content = $this->sftpReadStorage->read($path);
+
+            $this->s3Storage->write(sprintf('received/%s', $path), $content);
+
+            return $content;
         }, $allPaths);
 
         foreach ($contents as $content) {

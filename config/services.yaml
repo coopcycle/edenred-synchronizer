@@ -25,12 +25,12 @@ services:
     App\Service\EdenredManager:
         arguments:
             $partnerName: '%env(EDENRED_PARTNER_NAME)%'
-            $sftpReadDirectory: '%env(EDENRED_SFTP_READ_DIR)%'
-            $sftpWriteDirectory: '%env(EDENRED_SFTP_WRITE_DIR)%'
 
-    League\Flysystem\PhpseclibV3\SftpConnectionProvider:
+    s3_client:
+        class: Aws\S3\S3Client
         arguments:
-            $host: '%env(EDENRED_SFTP_HOST)%'
-            $username: '%env(EDENRED_SFTP_USERNAME)%'
-            $privateKey: '%env(base64:EDENRED_SFTP_PRIVATE_KEY)%'
-            $port: '%env(EDENRED_SFTP_PORT)%'
+            - endpoint: '%env(S3_ENDPOINT)%'
+              version: latest
+              region: '%env(S3_REGION)%'
+              credentials: { key: '%env(S3_CREDENTIALS_KEY)%', secret: '%env(S3_CREDENTIALS_SECRET)%' }
+              use_path_style_endpoint: true

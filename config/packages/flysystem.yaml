@@ -1,0 +1,24 @@
+# Read the documentation at https://github.com/thephpleague/flysystem-bundle/blob/master/docs/1-getting-started.md
+flysystem:
+    storages:
+        s3.storage:
+            adapter: 'aws'
+            options:
+                client: 's3_client'
+                bucket: '%env(S3_BUCKET)%'
+        sftp.write.storage:
+            adapter: 'sftp'
+            options:
+                host: '%env(EDENRED_SFTP_HOST)%'
+                port: '%env(int:EDENRED_SFTP_PORT)%'
+                username: '%env(EDENRED_SFTP_USERNAME)%'
+                privateKey: '%env(base64:EDENRED_SFTP_PRIVATE_KEY)%'
+                root: '%env(EDENRED_SFTP_WRITE_DIR)%'
+        sftp.read.storage:
+            adapter: 'sftp'
+            options:
+                host: '%env(EDENRED_SFTP_HOST)%'
+                port: '%env(int:EDENRED_SFTP_PORT)%'
+                username: '%env(EDENRED_SFTP_USERNAME)%'
+                privateKey: '%env(base64:EDENRED_SFTP_PRIVATE_KEY)%'
+                root: '%env(EDENRED_SFTP_READ_DIR)%'
