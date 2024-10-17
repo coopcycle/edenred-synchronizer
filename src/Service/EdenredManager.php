@@ -24,6 +24,7 @@ class EdenredManager
     private $sftpConnectionProvider;
     private $sftpReadDirectory;
     private $sftpWriteDirectory;
+    private $s3Storage;
 
     public function __construct(
         EntityManagerInterface $entityManager,
