@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use DOMDocument;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\PhpseclibV3\SftpAdapter;
 use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
 use League\Flysystem\StorageAttributes;
@@ -30,7 +31,8 @@ class EdenredManager
         SftpConnectionProvider $sftpConnectionProvider,
         string $partnerName,
         string $sftpReadDirectory,
-        string $sftpWriteDirectory
+        string $sftpWriteDirectory,
+        FilesystemOperator $s3Storage
     )
     {
         $this->entityManager = $entityManager;
@@ -39,6 +41,7 @@ class EdenredManager
         $this->partnerName = $partnerName;
         $this->sftpReadDirectory = $sftpReadDirectory;
         $this->sftpWriteDirectory = $sftpWriteDirectory;
+        $this->s3Storage = $s3Storage;
     }
 
     public function createSyncFileAndSendToEdenred(array $merchants): void
@@ -65,6 +68,7 @@ class EdenredManager
         ));
 
         try {
+            $this->s3Storage->write(sprintf('sent/%s', $fullFileName), $xml);
             $filesystem->write($fullFileName, $xml);
             $file->setSent(true);
         } catch (UnableToWriteFile $e) {

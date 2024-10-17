@@ -26,9 +26,39 @@ services:
         - ./var/download:/home/edenred/download
         - ./ssh/id_ed25519.pub:/home/edenred/.ssh/keys/id_ed25519.pub:ro
     command: edenred::1001
+  minio:
+    image: minio/minio
+    command: server --console-address ":9001" /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ACCESS_KEY=${S3_CREDENTIALS_KEY}
+      - MINIO_SECRET_KEY=${S3_CREDENTIALS_SECRET}
+      - MINIO_REGION=fr-fr
+  create_bucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    environment:
+      - S3_CREDENTIALS_KEY
+      - S3_CREDENTIALS_SECRET
+      - S3_REGION
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add edenred http://minio:9000 $S3_CREDENTIALS_KEY $S3_CREDENTIALS_SECRET;
+      /usr/bin/mc mb --region $S3_REGION --ignore-existing edenred/files/;
+      /usr/bin/mc policy set public edenred/files/;
+      exit 0;
+      "
 
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
 
 ###> doctrine/doctrine-bundle ###
 ###< doctrine/doctrine-bundle ###
+
+volumes:
+  minio_data:
