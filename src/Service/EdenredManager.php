@@ -9,7 +9,6 @@ use DOMDocument;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemOperator;
-use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToWriteFile;
 use Psr\Log\LoggerInterface;
@@ -20,25 +19,20 @@ class EdenredManager
     private $entityManager;
     private $logger;
     private $partnerName;
-    private $sftpConnectionProvider;
-    private $sftpReadDirectory;
     private $s3Storage;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         LoggerInterface $logger,
-        SftpConnectionProvider $sftpConnectionProvider,
         string $partnerName,
-        string $sftpReadDirectory,
         FilesystemOperator $s3Storage,
-        private FilesystemOperator $sftpWriteStorage
+        private FilesystemOperator $sftpWriteStorage,
+        private FilesystemOperator $sftpReadStorage
     )
     {
         $this->entityManager = $entityManager;
         $this->logger = $logger;
-        $this->sftpConnectionProvider = $sftpConnectionProvider;
         $this->partnerName = $partnerName;
-        $this->sftpReadDirectory = $sftpReadDirectory;
         $this->s3Storage = $s3Storage;
     }
 
@@ -74,12 +68,7 @@ class EdenredManager
 
     public function readEdenredFileAndSynchronise()
     {
-        $filesystem = new Filesystem(new SftpAdapter(
-            $this->sftpConnectionProvider,
-            $this->sftpReadDirectory, // path
-        ));
-
-        $allPaths = $filesystem->listContents('')
+        $allPaths = $this->sftpReadStorage->listContents('')
             ->filter(fn (StorageAttributes $attributes) => $attributes->isFile())
             ->filter(fn (FileAttributes $attributes) =>
                 str_starts_with($attributes->path(), sprintf('RAEN_%s_TRDQ_', strtoupper($this->partnerName))) & $attributes->fileSize() > 0)
@@ -88,9 +77,9 @@ class EdenredManager
 
         $this->logger->info(sprintf('%d files at Edenred SFTP for sync', count($allPaths)));
 
-        $contents = array_map(function($path) use($filesystem) {
+        $contents = array_map(function($path) {
             $this->logger->info(sprintf('Reading content from file "%s"', $path));
-            return $filesystem->read($path);
+            return $this->sftpReadStorage->read($path);
         }, $allPaths);
 
         foreach ($contents as $content) {

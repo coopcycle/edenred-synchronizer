@@ -14,3 +14,11 @@ flysystem:
                 username: '%env(EDENRED_SFTP_USERNAME)%'
                 privateKey: '%env(base64:EDENRED_SFTP_PRIVATE_KEY)%'
                 root: '%env(EDENRED_SFTP_WRITE_DIR)%'
+        sftp.read.storage:
+            adapter: 'sftp'
+            options:
+                host: '%env(EDENRED_SFTP_HOST)%'
+                port: '%env(int:EDENRED_SFTP_PORT)%'
+                username: '%env(EDENRED_SFTP_USERNAME)%'
+                privateKey: '%env(base64:EDENRED_SFTP_PRIVATE_KEY)%'
+                root: '%env(EDENRED_SFTP_READ_DIR)%'
