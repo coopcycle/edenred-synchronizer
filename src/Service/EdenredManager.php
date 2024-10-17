@@ -9,7 +9,6 @@ use DOMDocument;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemOperator;
-use League\Flysystem\PhpseclibV3\SftpAdapter;
 use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToWriteFile;
@@ -23,7 +22,6 @@ class EdenredManager
     private $partnerName;
     private $sftpConnectionProvider;
     private $sftpReadDirectory;
-    private $sftpWriteDirectory;
     private $s3Storage;
 
     public function __construct(
@@ -32,8 +30,8 @@ class EdenredManager
         SftpConnectionProvider $sftpConnectionProvider,
         string $partnerName,
         string $sftpReadDirectory,
-        string $sftpWriteDirectory,
-        FilesystemOperator $s3Storage
+        FilesystemOperator $s3Storage,
+        private FilesystemOperator $sftpWriteStorage
     )
     {
         $this->entityManager = $entityManager;
@@ -41,7 +39,6 @@ class EdenredManager
         $this->sftpConnectionProvider = $sftpConnectionProvider;
         $this->partnerName = $partnerName;
         $this->sftpReadDirectory = $sftpReadDirectory;
-        $this->sftpWriteDirectory = $sftpWriteDirectory;
         $this->s3Storage = $s3Storage;
     }
 
@@ -63,14 +60,9 @@ class EdenredManager
         $file->setName($fullFileName);
         $this->entityManager->persist($file);
 
-        $filesystem = new Filesystem(new SftpAdapter(
-            $this->sftpConnectionProvider,
-            $this->sftpWriteDirectory, // path
-        ));
-
         try {
             $this->s3Storage->write(sprintf('sent/%s', $fullFileName), $xml);
-            $filesystem->write($fullFileName, $xml);
+            $this->sftpWriteStorage->write($fullFileName, $xml);
             $file->setSent(true);
         } catch (UnableToWriteFile $e) {
             $file->setErrors($e->getMessage());

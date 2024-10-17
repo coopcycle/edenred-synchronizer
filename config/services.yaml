@@ -26,7 +26,6 @@ services:
         arguments:
             $partnerName: '%env(EDENRED_PARTNER_NAME)%'
             $sftpReadDirectory: '%env(EDENRED_SFTP_READ_DIR)%'
-            $sftpWriteDirectory: '%env(EDENRED_SFTP_WRITE_DIR)%'
 
     League\Flysystem\PhpseclibV3\SftpConnectionProvider:
         arguments:
