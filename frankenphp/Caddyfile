@@ -30,6 +30,13 @@
 	encode zstd br gzip
 
 	mercure {
+		# Mercure 0.16 (shipped in FrankenPHP since late 2024) moved the
+		# publisher_jwt / subscriber_jwt directives behind "compatibility mode";
+		# without this, Caddy refuses to start with:
+		#   the "publisher_jwt", "subscriber_jwt", ... directives work only in
+		#   compatibility mode ... set "protocol_version_compatibility 8"
+		# Opt in explicitly so the config keeps working on current base images.
+		protocol_version_compatibility 8
 		# Transport to use (default to Bolt)
 		transport_url {$MERCURE_TRANSPORT_URL:bolt:///data/mercure.db}
 		# Publisher JWT key
